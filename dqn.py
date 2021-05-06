@@ -5,45 +5,22 @@ import matplotlib.pyplot as plt
 import time
 import matplotlib.animation as animation
 import matplotlib.patches as patches
-#from keras.models import Sequential
-#from keras.layers import Dense
-#from keras.optimizers import Adam
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
+
 
 #import priors_tabular as PR
 
 def Qlearn_multirun_tab():
-	model = Sequential()
-	model.add(Dense(24, input_shape=(3,), activation="relu"))
-	model.add(Dense(24, activation="relu"))
-	model.add(Dense(1, activation="linear"))
-	model.compile(loss="mse", optimizer=Adam(lr=0.001))
-
-	modelcopy = Sequential()
-	modelcopy.add(Dense(24, input_shape=(3,), activation="relu"))
-	modelcopy.add(Dense(24, activation="relu"))
-	modelcopy.add(Dense(1, activation="linear"))
-	modelcopy.compile(loss="mse", optimizer=Adam(lr=0.001))
-
-	
 	#This function just runs multiple instances of 
 	#Q-learning. Doing so helps obtain an average performance 
 	#measure over multiple runs.
 	retlog=[] # log of returns of all episodes, in all runs
-	bumpcountlog=[]
 	for i in range(p.Nruns):
 		print("Run no:",i)
-		tracebuffer=[]
-		tracebuffer_neg=[]
 		Q,ret=main_Qlearning_tab()#call Q learning
 		if i==0:
 			retlog=ret
-			bumpcountlog=bumpcountret
 		else:
 			retlog=np.vstack((retlog,ret))
-			bumpcountlog=np.vstack((bumpcountlog,bumpcountret))
 		#retlog.append(ret)
 		if (i+1)/p.Nruns==0.25:
 			print('25% runs complete')
@@ -54,24 +31,14 @@ def Qlearn_multirun_tab():
 		elif (i+1)==p.Nruns:
 			print('100% runs complete')
 	#meanreturns=(np.mean(retlog,axis=0))
-	return Q, retlog,betamatrix,bumpcountlog,tracemap,model
+	return Q, retlog
 
 def main_Qlearning_tab():
 	#This calls the main Q learning algorithm
 	Q=np.zeros((p.a,p.b,p.A)) # initialize Q function as zeros
-	tracemap=np.zeros((p.a,p.b,p.A))
-	betamatrix=np.ones((p.a,p.b,p.A))
-	#betamatrix=np.random.rand(p.a,p.b,p.A)
-	visitmap=np.zeros((p.a,p.b,p.A))
-	#statevisitslog=np.zeros((p.a,p.b)) # initialize counter for visits
 	goal_state=p.targ#target point
 	returns=[]#stores returns for each episode
-	bumpcountret=[]
 	ret=0
-	Qimall=[]
-	totcnt=0
-	success_attempts=0
-	tot_attempts=0
 	for i in range(p.episodes):
 		if (i+1)/p.episodes==0.25:
 			print('25% episodes done')
@@ -82,7 +49,6 @@ def main_Qlearning_tab():
 		elif (i+1)/p.episodes==1:
 			print('100% episodes done')
 		Q,ret=Qtabular(Q,i)#call Q learning
-		print(totcnt)
 		if i%1==0:
 			returns.append(ret)#compute return offline- can also be done online, but this way, a better estimate can be obtained
 	return Q, returns
@@ -138,7 +104,6 @@ def Qtabular(Q,episode_no):
 		if np.linalg.norm(next_state-target_state)<=p.thresh:
 			break
 		state=next_state.copy()
-	tot_attempts+=1
 
 	return Q,ret
 
@@ -294,3 +259,14 @@ if __name__=="__main__":
 		if i>0:			
 			csr.append(np.sum(mr[0:i])/i)
 	np.savez("DQN"+str(p.Nruns)+"_runs.npy.npz",retlog,Q)
+	s_retlog=np.shape(retlog)
+	x=range(s_retlog[1])
+	mn=np.mean(retlog,axis=0)
+	st_err=np.std(retlog,axis=0)/np.sqrt(p.Nruns)
+	plt.xlabel('Steps',fontsize=15) 
+	plt.ylabel('Average sum of rewards' ,fontsize=15)
+	plt.gca().legend(('Q-learning'),frameon=False)
+	plt.grid(linestyle='-')
+	plt.plot(x,mn,'r')
+	plt.fill_between(x,mn-st_err, mn+st_err,color='darksalmon',alpha=0.3)
+	plt.show()
