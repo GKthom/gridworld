@@ -263,7 +263,7 @@ if __name__=="__main__":
 	x=range(s_retlog[1])
 	mn=np.mean(retlog,axis=0)
 	st_err=np.std(retlog,axis=0)/np.sqrt(p.Nruns)
-	plt.xlabel('Steps',fontsize=15) 
+	plt.xlabel('Episodes',fontsize=15) 
 	plt.ylabel('Average sum of rewards' ,fontsize=15)
 	plt.gca().legend(('Q-learning'),frameon=False)
 	plt.grid(linestyle='-')
