@@ -9,6 +9,7 @@ install numpy, matplotlib
 
 Run: python qlearn.py
 
+params.py can be modified to change parameters or environment layout
 ## Authors
 
 * **Thommen George Karimpanal** 
